@@ -1,5 +1,10 @@
 import pygame
+import random
 
+'''TODO:    - fix move-function in game_ball
+            - draw ball as a circle
+            - create scoreboard logic (name and 10 best scores) 
+'''
 class game_ball(pygame.sprite.Sprite):
     def __init__(self, color):
         super().__init__()
@@ -7,18 +12,40 @@ class game_ball(pygame.sprite.Sprite):
         self.radius = 30
         self.image = pygame.Surface((50, 50)) #pygame.image.load('graphics/ball.png').convert_alpha()
         self.rect = self.image.get_rect(center = (screenwidth/2, screenheight/2))
-        self.image.fill(self.color, self.rect)
+        # doesn't work
+        self.image.fill(color, self.rect)
+        # set initial moving y-direction randomly, move towards player first
+        self.target = pygame.math.Vector2(screenwidth, random.randint(0, screenheight))
+        self.v = pygame.math.Vector2(self.target.x - self.rect.centerx, self.target.y - self.rect.centery) # compute vector that represents the route between ball and target
 
+    def get_pos(self):
+        return self.rect.center
+    
     def move(self):
-        pass
+        #v = v.move_towards(self.target, ball_speed_factor) # returns a vector moved toward the target by a given distance.
+        print(f'target: {self.target}, {self.v.x}, {self.v.y}')
+        #(x, y) = self.rect.center
+        self.rect.centerx += ball_speed * self.v.x
+        self.rect.centery += ball_speed * self.v.y
 
-    # does not yet work as supposed to, draws no circle
+    # does not yet work as supposed to, draws no circle, do in the end
     def draw(self, surface):
         pygame.draw.circle(surface, self.color, self.radius)
     
     def update(self):
-        self.move()
+        global game_active
+
+        if self.rect.collidepoint(self.target.x, self.target.y):
+            game_active = False
+        elif self.rect.colliderect(player_racket.sprite.rect):
+            pass
+        elif self.rect.colliderect(com_racket.sprite.rect):
+            pass
         
+        
+        self.move()
+
+
 class racket(pygame.sprite.Sprite):
     def __init__(self, position):
         super().__init__()
@@ -28,11 +55,12 @@ class racket(pygame.sprite.Sprite):
         else:
             self.rect = self.image.get_rect(midright = (screenwidth - 10, screenheight/2)) # create right racket
 
-    def move(self, y_pos):
-        self.rect.y = y_pos
+    def update(self, y_new):
+        (x,_) = self.rect.midright
+        self.rect.midright = (x, y_new)
 
-    def update(self, y_pos):
-        self.move(self, y_pos)
+def normalize(x, y):
+    res = 1/(x+y)
 
 # Initialization
 pygame.init()
@@ -49,28 +77,30 @@ game_name = font.render('Pong Game', False, (255,255,255))
 game_name_rect = game_name.get_rect(center = (screenwidth/2, screenheight/3))
 intro_msg = font.render('Press mouse to start', False, (255,255,255))
 intro_msg_rect = intro_msg.get_rect(center = (screenwidth/2, screenheight*2/3))
+ball_speed = 0.001 # must lay between 0 and 1
 
 
 # Objects/Groups
-left_racket = pygame.sprite.GroupSingle()
-left_racket.add(racket('left'))
+com_racket = pygame.sprite.GroupSingle()
+com_racket.add(racket('left'))
 
-right_racket = pygame.sprite.GroupSingle()
-right_racket.add(racket('right'))
+player_racket = pygame.sprite.GroupSingle()
+player_racket.add(racket('right'))
 
 ball = pygame.sprite.GroupSingle()
-ball.add(game_ball((255, 255, 255)))
+ball.add(game_ball((200, 200, 200)))
 
 
 while True:
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE: # quit game on close or esc
                 pygame.quit()
                 exit()
 
         if game_active:
             if event.type == pygame.MOUSEMOTION:
-                pass        
+                (x,y) = pygame.mouse.get_pos()
+                player_racket.update(y)        
 
         else:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -79,9 +109,12 @@ while True:
             
 
     if game_active:
-        screen.fill((94, 129, 162))
-        left_racket.draw(screen) # on screen
-        right_racket.draw(screen)
+        screen.fill('#aa899a')
+        (_, y_new) = ball.sprite.get_pos()
+        com_racket.update(y_new)
+        com_racket.draw(screen) # on screen
+        player_racket.draw(screen)
+        ball.update()
         ball.draw(screen)
 
     else:
