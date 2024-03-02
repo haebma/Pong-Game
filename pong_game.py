@@ -1,11 +1,13 @@
 import pygame
 import random
 
-'''TODO:    - draw ball as a circle (optional)
+'''TODO:    - ZUERST: Single Player- Code aufräumen/kürzen ;)
+            - draw ball as a circle (optional)
             - add custom ballsize- settings (easy, normal, hard) and with that different score_boards
             - prettier game_speed-growth function (slower in the end, little too fast)
             - create scoreboard logic (name and 10 best scores) 
             - add multiplayer -> stir racket with w/s and up/down
+
 '''
 class game_ball(pygame.sprite.Sprite):
     def __init__(self, color):
