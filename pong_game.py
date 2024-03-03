@@ -1,41 +1,38 @@
 import pygame
 import random
 
-'''TODO:    - ZUERST: Single Player- Code aufräumen/kürzen ;)
-            - draw ball as a circle (optional)
-            - add custom ballsize- settings (easy, normal, hard) and with that different score_boards
+'''TODO:    - add easy, normal, hard mode with custom ballsize- and racket-settings and maybe bg_colors and different score_boards
             - prettier game_speed-growth function (slower in the end, little too fast)
-            - create scoreboard logic (name and 10 best scores) 
+            - create scoreboard logic (name and 10 best scores) -> new file for storage
             - add multiplayer -> stir racket with w/s and up/down
 
 '''
 class game_ball(pygame.sprite.Sprite):
-    def __init__(self, color):
+    def __init__(self, color, diameter):
         super().__init__()
-        self.color = color
-        self.radius = 30
-        self.image = pygame.Surface((50, 50)) #pygame.image.load('graphics/ball.png').convert_alpha()
+        self.image = pygame.Surface((diameter, diameter)) #pygame.image.load('graphics/ball.png').convert_alpha()
         self.rect = self.image.get_rect(center = (screenwidth/2, screenheight/2))
-        # doesn't work
-        self.image.fill(color, self.rect)
+        self.image.fill(color)
+        self.radius = diameter/2
+        self.color = color
         # set initial moving y-direction randomly, move towards player first
         y = screenheight/2
-        while screenheight/2 - 5 <= y <= screenheight/2 + 5:
+        while screenheight/2 - 10 <= y <= screenheight/2 + 10:
             y = random.randint(0, screenheight)
-        self.target = pygame.math.Vector2(screenwidth, y)
+        self.target = pygame.math.Vector2(screenwidth, y) # sets point where ball is initially headed to
         self.v = pygame.math.Vector2(self.target.x - self.rect.centerx, self.target.y - self.rect.centery).normalize() # compute vector that represents the route between ball and target
-
     
     def get_pos(self):
         return self.rect.center
     
     def move(self):
+        # the greater the factor, the more fluent is the game! Moves 'factor' pixels per frame
         self.rect.centerx += 5 * self.v.x
-        self.rect.centery += 5 * self.v.y # the greater the factor, the more fluent is the game!
+        self.rect.centery += 5 * self.v.y
         
-    # does not yet work as supposed to, draws no circle, do in the end
+    # ball is a circle not a square
     def draw(self, surface):
-        pygame.draw.circle(surface, self.color, self.radius)
+        pygame.draw.circle(surface, self.color, self.rect.center, self.radius)
     
     def update(self):
         global game_active, game_speed
@@ -69,10 +66,11 @@ class racket(pygame.sprite.Sprite):
     def __init__(self, position):
         super().__init__()
         self.image = pygame.image.load('graphics/racket.png').convert_alpha()
+        # create and position rackets
         if position == 'left':
-            self.rect = self.image.get_rect(midleft = (10, screenheight/2)) # create left racket
+            self.rect = self.image.get_rect(midleft = (10, screenheight/2))
         else:
-            self.rect = self.image.get_rect(midright = (screenwidth - 10, screenheight/2)) # create right racket
+            self.rect = self.image.get_rect(midright = (screenwidth - 10, screenheight/2))
 
     def update(self, y_new):
         self.rect.centery = y_new
@@ -80,7 +78,7 @@ class racket(pygame.sprite.Sprite):
 
 def display_score():
     current_time = (pygame.time.get_ticks() - start_time) // 1000 # compute relative time (time that's passed since clicking mouse)
-    score_surf = font.render(f'Score: {current_time}', False, (255, 255, 255))
+    score_surf = font.render(f'Score: {current_time}', True, (255, 255, 255))
     score_rect = score_surf.get_rect(center = (screenwidth/2, screenheight/5))
     screen.blit(score_surf, score_rect)
     return current_time
@@ -92,8 +90,11 @@ pygame.init()
 # Global Variables
 
 # adjustable :) -----------
-ball_size = -1
 initial_game_speed = 100
+ball_color = (255, 255, 255)
+ball_diameter = 50
+bg_color = ('#aa899a') # game active, other ones: '#aa899a'
+intro_color = (94, 129, 162) # intro and game-over
 #--------------------------
 
 score = 0
@@ -103,10 +104,10 @@ game_speed = initial_game_speed
 screenwidth = 1400
 screenheight = 900
 screen = pygame.display.set_mode((screenwidth, screenheight))
-pygame.display.set_caption('Pong Game')
 font = pygame.font.SysFont('Quantum Sans Serif Font', 100)
 clock = pygame.time.Clock()
 game_active = False
+pygame.display.set_caption('Pong Game')
 
 # Intro Screen
 game_name = font.render('Pong Game', False, (255,255,255))
@@ -128,7 +129,7 @@ player_racket = pygame.sprite.GroupSingle()
 player_racket.add(racket('right'))
 
 ball = pygame.sprite.GroupSingle()
-ball.add(game_ball((200, 200, 200)))
+ball.add(game_ball(ball_color, ball_diameter))
 
 
 while True:
@@ -145,28 +146,28 @@ while True:
             
 
     if game_active:
-        screen.fill('#aa899a')
+        screen.fill(bg_color)
         score = display_score()
 
-        # com racket constantly adapts to ball-position
-        com_racket.update(ball.sprite.get_pos()[1])
-        com_racket.draw(screen) # on screen
+        # update ball and racket positions and draw them
+        com_racket.update(ball.sprite.get_pos()[1]) # com racket constantly adapts to ball-position
+        com_racket.draw(screen)
 
         player_racket.update(pygame.mouse.get_pos()[1])
         player_racket.draw(screen)
 
         ball.update()
-        ball.draw(screen)
+        ball.sprite.draw(screen) # opt: remove 'sprite' to make ball squared
 
     else:
-        screen.fill((94, 129, 162))
+        screen.fill(intro_color)
 
         if score == 0:
-            # blit custom intro screen
+            # show custom intro screen
             screen.blit(game_name, game_name_rect)
             screen.blit(intro_msg, intro_msg_rect)
         else:
-            # print custom game over screen
+            # show custom game over screen
             screen.blit(game_over_msg, game_over_rect)
             score_msg = font.render(f'Your Score: {score}', False, (255, 255, 255))
             score_rect = score_msg.get_rect(center = (screenwidth/2, screenheight*3/5))
@@ -177,7 +178,7 @@ while True:
             game_speed = initial_game_speed
             ball.sprite.rect.center = (screenwidth/2, screenheight/2)
             y = screenheight/2
-            while screenheight/2 - 5 <= y <= screenheight/2 + 5:
+            while screenheight/2 - 10 <= y <= screenheight/2 + 10:
                 y = random.randint(0, screenheight)
             ball.sprite.target = pygame.math.Vector2(screenwidth, y)
             ball.sprite.v = pygame.math.Vector2(ball.sprite.target.x - ball.sprite.rect.centerx, ball.sprite.target.y - ball.sprite.rect.centery).normalize()
