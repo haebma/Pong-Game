@@ -136,10 +136,10 @@ game_over_msg = font.render('Game Over', True, (255, 255, 255))
 game_over_rect = game_over_msg.get_rect(center = (screenwidth/2, screenheight/5))
 
 # Game Modes
-single_mode = font.render('One Player', True, (255, 255, 255))
-single_rect = single_mode.get_rect(center = (screenwidth*1/4, screenheight*4/5))
+one_player_mode = font.render('One Player', True, (255, 255, 255))
+one_player_rect = one_player_mode.get_rect(center = (screenwidth*1/4, screenheight*4/5))
 two_player_mode = font.render('Two Players', True, (255, 255, 255))
-two_player_rect = single_mode.get_rect(center = (screenwidth*3/4, screenheight*4/5))
+two_player_rect = one_player_mode.get_rect(center = (screenwidth*3/4, screenheight*4/5))
 
 # Objects/Groups
 player_racket = pygame.sprite.GroupSingle()
@@ -176,7 +176,7 @@ while True:
 
         if not game_active:
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if single_rect.collidepoint(pygame.mouse.get_pos()): # start single player
+                if one_player_rect.collidepoint(pygame.mouse.get_pos()): # start single player
                     game_mode = 1
                     com_racket.add(racket('left'))
                     game_active = True
@@ -216,7 +216,7 @@ while True:
             # show custom intro screen
             screen.blit(game_name, game_name_rect)
             screen.blit(intro_msg, intro_msg_rect)
-            screen.blit(single_mode, single_rect)
+            screen.blit(one_player_mode, one_player_rect)
             screen.blit(two_player_mode, two_player_rect)
         else:
             # show custom game over screen
@@ -232,7 +232,7 @@ while True:
                 screen.blit(winner_msg, winner_rect)
             
             screen.blit(score_msg, score_rect)
-            screen.blit(single_mode, single_rect)
+            screen.blit(one_player_mode, one_player_rect)
             screen.blit(two_player_mode, two_player_rect)
 
             # reset variables
@@ -241,13 +241,8 @@ while True:
             if game_mode == 2:
                 player2_racket.sprite.rect.centery = screenheight/2
             player_racket.sprite.rect.centery = screenheight/2
-            
-            y = screenheight/2
-            while y == screenheight/2:
-                y = random.randint(0, screenheight)
-            ball.sprite.target = pygame.math.Vector2(screenwidth, y)
-            ball.sprite.v = pygame.math.Vector2(ball.sprite.target.x - ball.sprite.rect.centerx, ball.sprite.target.y - ball.sprite.rect.centery).normalize()
-
+            ball.empty()
+            ball.add(game_ball(ball_color, ball_diameter))
 
     pygame.display.update()
     clock.tick(game_speed)
