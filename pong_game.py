@@ -1,11 +1,10 @@
 import pygame
 import random
+import math
 
 '''TODO:    - add easy, normal, hard mode with custom ballsize- and racket-settings and maybe bg_colors and different score_boards
             - create scoreboard logic (name and 10 best scores) -> new file for storage
-            - 2 player mode: maybe add items like ball invisible for 1 sec or faster or gets reflected by item box :-) new game mode 'special mode'
-            [- prettier game_speed-growth function (slower in the end, little too fast)]
-
+            - 2 player mode: maybe add items like ball invisible for 0.5 sec or faster or gets reflected by item box :-) new game mode 'special mode'
 '''
 class game_ball(pygame.sprite.Sprite):
     def __init__(self, color, diameter):
@@ -15,7 +14,7 @@ class game_ball(pygame.sprite.Sprite):
         self.image.fill(color)
         self.radius = diameter/2
         self.color = color
-        # set initial moving y-direction randomly, move towards player first
+        # set initial moving y-direction randomly, move towards right player first
         y = screenheight/2
         while y == screenheight/2:
             y = random.randint(0, screenheight)
@@ -49,9 +48,9 @@ class game_ball(pygame.sprite.Sprite):
         elif self.rect.colliderect(player_racket.sprite.rect): 
             surface_normal = pygame.math.Vector2(1, 0)
             self.v.reflect_ip(surface_normal)
-            game_speed *= 1.1
+            #game_speed *= 1.1
+            game_speed += 2*math.log(game_speed)
         elif game_mode == 1 and self.rect.colliderect(com_racket.sprite.rect):
-            print(f'game_speed: {game_speed}')
             surface_normal = pygame.math.Vector2(1, 0)
             self.v.reflect_ip(surface_normal)
         elif game_mode == 2 and self.rect.colliderect(player2_racket.sprite.rect):
@@ -84,7 +83,10 @@ class racket(pygame.sprite.Sprite):
     
     def update(self, y_new):
         self.rect.centery = y_new
-
+        if self.rect.top <= 0:
+            self.rect.top = 0
+        elif self.rect.bottom >= screenheight:
+            self.rect.bottom = screenheight
 
 def display_score():
     current_time = (pygame.time.get_ticks() - start_time) // 1000 # compute relative time (time that's passed since clicking mouse)
