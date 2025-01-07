@@ -29,9 +29,9 @@ This is a simple implementation of the classic Pong game using Python and the Py
 
 ## How to Play
 
-# Single Player (Arcade Mode)
+### Single Player (Arcade Mode)
 - Use the Mouse to move the paddle up and down.
 
-# Two Player
+### Two Player
 - Player One: Use the `W` and `S` keys to move the left paddle up and down.
 - Player Two: Use the `Up` and `Down` arrow keys to move the right paddle up and down.
